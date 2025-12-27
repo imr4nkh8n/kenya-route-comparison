@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kenya Truck Route Comparison</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { font-family:Arial; background:#0e1117; color:#e5e7eb; }
+.container { max-width:1200px; margin:auto; }
+h2,h3 { text-align:center; }
+select,input { padding:6px; margin:6px; }
+canvas { margin-top:30px; }
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+th,td { border:1px solid #374151; padding:8px; text-align:center; }
+th { background:#1f2937; }
+.good { background:#064e3b; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>Nairobi → Nakuru Truck Performance Comparison</h2>
+
+<h3>Payload (tonnes)</h3>
+<input type="range" id="payload" min="8" max="12" value="10">
+<span id="payloadVal">10</span> t
+
+<h3>Diesel Price (KES/L)</h3>
+<input type="number" id="diesel" value="171.4">
+
+<h3>Hire Rate (KES / trip)</h3>
+<input type="number" id="hire" value="350000">
+
+<br><br>
+<button onclick="run()">Generate Comparison</button>
+
+<canvas id="elevChart"></canvas>
+<canvas id="speedChart"></canvas>
+<canvas id="fuelChart"></canvas>
+
+<table id="summary"></table>
+
+</div>
+
+<script>
+document.getElementById("payload").oninput=function(){
+  document.getElementById("payloadVal").innerText=this.value;
+};
+
+var routeKm = [];
+for(var i=0;i<=160;i+=5) routeKm.push(i);
+
+/* Synthetic but realistic Nairobi–Nakuru elevation */
+var elevation = [1795,1800,1810,1830,1860,1920,2000,2150,2300,2450,2600,2750,2900,3050,3000,2900,2750,2600,2450,2300,2150,2000,1900,1850,1800,1780,1760,1750,1740,1735,1730,1725,1720];
+
+var grade = [0];
+for(var i=1;i<elevation.length;i++){
+  grade.push(((elevation[i]-elevation[i-1])/5000)*100);
+}
+
+var trucks = {
+  fuso:{name:"Fuso FI 1217R",mass:24800,eff:0.38,crr:0.006,baseSpeed:80},
+  isuzu:{name:"Isuzu FRR90N",mass:21000,eff:0.36,crr:0.007,baseSpeed:80}
+};
+
+function simulate(truck,payload,diesel){
+  var speed=[], fuel=[];
+  for(var i=0;i<grade.length;i++){
+    var s=truck.baseSpeed;
+    if(grade[i]>5) s-=10;
+    if(grade[i]>7) s-=10;
+    if(payload>10000 && grade[i]>5) s-=5;
+    if(s<40) s=40;
+
+    var force=(truck.mass+payload)*9.81*(grade[i]/100)+(truck.mass+payload)*9.81*truck.crr;
+    var power=(force*(s/3.6))/1000;
+    var f=(power/(truck.eff*36))*diesel;
+
+    speed.push(s);
+    fuel.push(f);
+  }
+  return {speed:speed,fuel:fuel};
+}
+
+function run(){
+  var payload=parseFloat(payloadVal.innerText)*1000;
+  var diesel=parseFloat(document.getElementById("diesel").value);
+  var hire=parseFloat(document.getElementById("hire").value);
+
+  var fuso=simulate(trucks.fuso,payload,diesel);
+  var isuzu=simulate(trucks.isuzu,payload,diesel);
+
+  new Chart(elevChart,{
+    type:"line",
+    data:{labels:routeKm,datasets:[{label:"Elevation (m)",data:elevation,borderColor:"#38bdf8"}]},
+    options:{plugins:{title:{display:true,text:"Elevation Profile"}},scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"m"}}}}
+  });
+
+  new Chart(speedChart,{
+    type:"line",
+    data:{labels:routeKm,datasets:[
+      {label:"Fuso Speed (km/h)",data:fuso.speed,borderColor:"#22c55e"},
+      {label:"Isuzu Speed (km/h)",data:isuzu.speed,borderColor:"#ef4444"}
+    ]},
+    options:{plugins:{title:{display:true,text:"Speed vs Distance"}},scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"km/h"}}}}
+  });
+
+  new Chart(fuelChart,{
+    type:"line",
+    data:{labels:routeKm,datasets:[
+      {label:"Fuso Fuel (KES/km)",data:fuso.fuel,borderColor:"#16a34a"},
+      {label:"Isuzu Fuel (KES/km)",data:isuzu.fuel,borderColor:"#dc2626"}
+    ]},
+    options:{plugins:{title:{display:true,text:"Fuel Intensity"}},scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"KES/km"}}}}
+  });
+
+  var fusoCost=fuso.fuel.reduce((a,b)=>a+b,0)*5;
+  var isuzuCost=isuzu.fuel.reduce((a,b)=>a+b,0)*5;
+
+  summary.innerHTML=
+    "<tr><th>Metric</th><th>Fuso</th><th>Isuzu</th></tr>"+
+    "<tr><td>Total Fuel Cost</td><td class='good'>KES "+fusoCost.toFixed(0)+"</td><td>KES "+isuzuCost.toFixed(0)+"</td></tr>"+
+    "<tr><td>Trip Profit</td><td class='good'>KES "+(hire-fusoCost).toFixed(0)+"</td><td>KES "+(hire-isuzuCost).toFixed(0)+"</td></tr>";
+}
+</script>
+</body>
+</html>
+
