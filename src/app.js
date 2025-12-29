@@ -50,16 +50,34 @@ function generate(){
   const avgSpeed=speeds.reduce((a,b)=>a+b)/speeds.length; 
   const profit=hireRate-totalFuel; 
   
-  kpiDist.innerText=${r.dist} km; 
-  kpiSpeed.innerText=${avgSpeed.toFixed(1)} km/h; 
-  kpiFuel.innerText=KES ${totalFuel.toFixed(0)}; 
-  kpiProfit.innerText=KES ${profit.toFixed(0)}; 
+  kpiDist.innerText = `${r.dist} km`;
+kpiSpeed.innerText = `${avgSpeed.toFixed(1)} km/h`;
+kpiFuel.innerText = `KES ${totalFuel.toFixed(0)}`;
+kpiProfit.innerText = `KES ${profit.toFixed(0)}`;
+
+const route = document.getElementById("route");
+const truck = document.getElementById("truck");
+const payload = document.getElementById("payload");
+const diesel = document.getElementById("diesel");
+const hire = document.getElementById("hire");
+
+const kpiDist = document.getElementById("kpiDist");
+const kpiSpeed = document.getElementById("kpiSpeed");
+const kpiFuel = document.getElementById("kpiFuel");
+const kpiProfit = document.getElementById("kpiProfit");
+
+const elevChart = document.getElementById("elevChart");
+const speedChart = document.getElementById("speedChart");
+const fuelChart = document.getElementById("fuelChart");
+const gearChart = document.getElementById("gearChart");
+
+const summary = document.getElementById("summary");
+
   
   charts.push(new Chart(elevChart,{ 
     type:"line", 
     data:{labels:r.elev.map((_,i)=>Math.round(i*step)), 
-          datasets:[{label:"Elevation 
-            (m)",data:r.elev,borderColor:"#38bdf8",borderWidth:1.5}]}, 
+          datasets:[{label:"Elevation (m)",data:r.elev,borderColor:"#38bdf8",borderWidth:1.5}]}, 
     options:{plugins:{title:{display:true,text:"Elevation Profile"},zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true}}}}, 
              scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"m"}}}} })); 
   
@@ -80,13 +98,12 @@ function generate(){
                                          datasets:[{label:"Gear Usage (placeholder)",data:[5,12,22,30,20,11],backgroundColor:"#00f0ff"}]}, 
                                    options:{plugins:{title:{display:true,text:"Gear Usage (Phase C placeholder)"}}} })); 
   
-  summary.innerHTML= 
-    <tr><th>Metric</th><th>${truck.options[truck.selectedIndex].text}
-    </th></tr> 
-    <tr><td>Fuel Cost</td><td class="good">KES ${totalFuel.toFixed(0)}
-    </td></tr> 
-    <tr><td>Avg Speed</td><td>${avgSpeed.toFixed(1)} km/h</td></tr> 
-    <tr><td>Trip Profit</td><td class="good">KES ${profit.toFixed(0)}</td></tr> 
-    <tr><td colspan="2">Maintains higher climb speed with lower fuel penalty on Kenyan gradients.</td></tr> ; }
+  summary.innerHTML = `
+  <tr><th>Metric</th><th>${truck.options[truck.selectedIndex].text}</th></tr>
+  <tr><td>Fuel Cost</td><td class="good">KES ${totalFuel.toFixed(0)}</td></tr>
+  <tr><td>Avg Speed</td><td>${avgSpeed.toFixed(1)} km/h</td></tr>
+  <tr><td>Trip Profit</td><td class="good">KES ${profit.toFixed(0)}</td></tr>
+  <tr><td colspan="2">Maintains higher climb speed with lower fuel penalty on Kenyan gradients.</td></tr>
+`;
 
 window.generate = generate;
