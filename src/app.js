@@ -88,5 +88,7 @@ function generate(){
     <tr><td>Avg Speed</td><td>${avgSpeed.toFixed(1)} km/h</td></tr> 
     <tr><td>Trip Profit</td><td class="good">KES ${profit.toFixed(0)}</td></tr> 
     <tr><td colspan="2">Maintains higher climb speed with lower fuel penalty on Kenyan gradients.</td></tr> ; }
+
+window.generate = generate;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
                                                                                                                                                                                                                                                                                                                                                                                                                                                                       window.generate = generate;
