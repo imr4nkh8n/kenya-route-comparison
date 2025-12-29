@@ -1,4 +1,3 @@
-// vehicle specs
 export const vehicles = {
   fuso: {
     name: "Fuso FI 1217R",
