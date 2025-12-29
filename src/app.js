@@ -90,5 +90,3 @@ function generate(){
     <tr><td colspan="2">Maintains higher climb speed with lower fuel penalty on Kenyan gradients.</td></tr> ; }
 
 window.generate = generate;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                      window.generate = generate;
