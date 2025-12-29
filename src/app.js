@@ -21,89 +21,91 @@ function resetCharts(){
   charts=[]; 
 } 
 
-function generate(){ 
-  resetCharts(); 
-  
-  const r=routes[route.value]; 
-  const t=trucks[truck.value]; 
-  const payloadKg=payload.value*1000; 
-  const dieselCost=+diesel.value; 
-  const hireRate=+hire.value; 
-  
-  const step=r.dist/(r.elev.length-1); 
-  let speeds=[],fuel=[]; 
-  let totalFuel=0; 
-  
-  for(let i=0;i<r.elev.length;i++){ 
-    let grade=i? (r.elev[i]-r.elev[i-1])/(step*1000):0; 
-    let speed=80-Math.max(0,grade*300); 
-    if(speed<40)speed=40; 
-    speeds.push(speed); 
-    
-    let force=(t.mass+payloadKg)*9.81*(grade+t.crr); 
-    let power=force*(speed/3.6)/1000; 
-    let f=(power/(t.eff*36))*dieselCost; 
-    fuel.push(f); 
-    totalFuel+=f*step; 
-  } 
-  
-  const avgSpeed=speeds.reduce((a,b)=>a+b)/speeds.length; 
-  const profit=hireRate-totalFuel; 
-  
+function generate() {
+  resetCharts();
+
+  const r = routes[route.value];
+  const t = trucks[truck.value];
+  const payloadKg = payload.value * 1000;
+  const dieselCost = +diesel.value;
+  const hireRate = +hire.value;
+
+  const step = r.dist / (r.elev.length - 1);
+  let speeds = [], fuel = [];
+  let totalFuel = 0;
+
+  for (let i = 0; i < r.elev.length; i++) {
+    let grade = i ? (r.elev[i] - r.elev[i - 1]) / (step * 1000) : 0;
+    let speed = 80 - Math.max(0, grade * 300);
+    if (speed < 40) speed = 40;
+    speeds.push(speed);
+
+    let force = (t.mass + payloadKg) * 9.81 * (grade + t.crr);
+    let power = force * (speed / 3.6) / 1000;
+    let f = (power / (t.eff * 36)) * dieselCost;
+    fuel.push(f);
+    totalFuel += f * step;
+  }
+
+  const avgSpeed = speeds.reduce((a, b) => a + b) / speeds.length;
+  const profit = hireRate - totalFuel;
+
   kpiDist.innerText = `${r.dist} km`;
-kpiSpeed.innerText = `${avgSpeed.toFixed(1)} km/h`;
-kpiFuel.innerText = `KES ${totalFuel.toFixed(0)}`;
-kpiProfit.innerText = `KES ${profit.toFixed(0)}`;
+  kpiSpeed.innerText = `${avgSpeed.toFixed(1)} km/h`;
+  kpiFuel.innerText = `KES ${totalFuel.toFixed(0)}`;
+  kpiProfit.innerText = `KES ${profit.toFixed(0)}`;
 
-const route = document.getElementById("route");
-const truck = document.getElementById("truck");
-const payload = document.getElementById("payload");
-const diesel = document.getElementById("diesel");
-const hire = document.getElementById("hire");
+  charts.push(new Chart(elevChart, {
+    type: "line",
+    data: {
+      labels: r.elev.map((_, i) => Math.round(i * step)),
+      datasets: [{
+        label: "Elevation (m)",
+        data: r.elev,
+        borderColor: "#38bdf8",
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      plugins: {
+        title: { display: true, text: "Elevation Profile" },
+        zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true } } }
+      }
+    }
+  }));
 
-const kpiDist = document.getElementById("kpiDist");
-const kpiSpeed = document.getElementById("kpiSpeed");
-const kpiFuel = document.getElementById("kpiFuel");
-const kpiProfit = document.getElementById("kpiProfit");
+  charts.push(new Chart(speedChart, {
+    type: "line",
+    data: {
+      labels: r.elev.map((_, i) => Math.round(i * step)),
+      datasets: [{
+        label: "Speed (km/h)",
+        data: speeds,
+        borderColor: "#22c55e",
+        borderWidth: 1.5
+      }]
+    }
+  }));
 
-const elevChart = document.getElementById("elevChart");
-const speedChart = document.getElementById("speedChart");
-const fuelChart = document.getElementById("fuelChart");
-const gearChart = document.getElementById("gearChart");
+  charts.push(new Chart(fuelChart, {
+    type: "line",
+    data: {
+      labels: r.elev.map((_, i) => Math.round(i * step)),
+      datasets: [{
+        label: "Fuel Cost (KES/km)",
+        data: fuel,
+        borderColor: "#ef4444",
+        borderWidth: 1.5
+      }]
+    }
+  }));
 
-const summary = document.getElementById("summary");
-
-  
-  charts.push(new Chart(elevChart,{ 
-    type:"line", 
-    data:{labels:r.elev.map((_,i)=>Math.round(i*step)), 
-          datasets:[{label:"Elevation (m)",data:r.elev,borderColor:"#38bdf8",borderWidth:1.5}]}, 
-    options:{plugins:{title:{display:true,text:"Elevation Profile"},zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true}}}}, 
-             scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"m"}}}} })); 
-  
-  charts.push(new Chart(speedChart,{ type:"line", 
-                                    data:{labels:r.elev.map((_,i)=>Math.round(i*step)), 
-                                          datasets:[{label:"Speed (km/h)",data:speeds,borderColor:"#22c55e",borderWidth:1.5}]}, 
-                                    options:{plugins:{title:{display:true,text:"Speed vs Distance"},zoom:{zoom:{wheel:{enabled:true}}}}, 
-                                             scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"km/h"}}}} })); 
-  
-  charts.push(new Chart(fuelChart,{ type:"line", 
-                                   data:{labels:r.elev.map((_,i)=>Math.round(i*step)), 
-                                         datasets:[{label:"Fuel Cost (KES/km)",data:fuel,borderColor:"#ef4444",borderWidth:1.5}]}, 
-                                   options:{plugins:{title:{display:true,text:"Fuel Intensity"},zoom:{zoom:{wheel:{enabled:true}}}}, 
-                                            scales:{x:{title:{display:true,text:"Distance (km)"}},y:{title:{display:true,text:"KES/km"}}}} })); 
-  
-  charts.push(new Chart(gearChart,{ type:"bar", 
-                                   data:{labels:["1","2","3","4","5","6"], 
-                                         datasets:[{label:"Gear Usage (placeholder)",data:[5,12,22,30,20,11],backgroundColor:"#00f0ff"}]}, 
-                                   options:{plugins:{title:{display:true,text:"Gear Usage (Phase C placeholder)"}}} })); 
-  
   summary.innerHTML = `
-  <tr><th>Metric</th><th>${truck.options[truck.selectedIndex].text}</th></tr>
-  <tr><td>Fuel Cost</td><td class="good">KES ${totalFuel.toFixed(0)}</td></tr>
-  <tr><td>Avg Speed</td><td>${avgSpeed.toFixed(1)} km/h</td></tr>
-  <tr><td>Trip Profit</td><td class="good">KES ${profit.toFixed(0)}</td></tr>
-  <tr><td colspan="2">Maintains higher climb speed with lower fuel penalty on Kenyan gradients.</td></tr>
-`;
+    <tr><th>Metric</th><th>${truck.options[truck.selectedIndex].text}</th></tr>
+    <tr><td>Fuel Cost</td><td class="good">KES ${totalFuel.toFixed(0)}</td></tr>
+    <tr><td>Avg Speed</td><td>${avgSpeed.toFixed(1)} km/h</td></tr>
+    <tr><td>Trip Profit</td><td class="good">KES ${profit.toFixed(0)}</td></tr>
+  `;
+}
 
 window.generate = generate;
